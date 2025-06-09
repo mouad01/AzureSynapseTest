@@ -1,0 +1,82 @@
+{
+	"name": "Load_API_data_posts",
+	"properties": {
+		"activities": [
+			{
+				"name": "retreive_API_data",
+				"type": "SynapseNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebook": {
+						"referenceName": "nb_retreive_poste_API",
+						"type": "NotebookReference"
+					},
+					"parameters": {
+						"apiEndpoint": {
+							"value": {
+								"value": "@pipeline().parameters.apiEndpoint",
+								"type": "Expression"
+							},
+							"type": "string"
+						}
+					},
+					"snapshot": true,
+					"sparkPool": {
+						"referenceName": "SparkPool1",
+						"type": "BigDataPoolReference"
+					},
+					"executorSize": "Small",
+					"driverSize": "Small"
+				}
+			},
+			{
+				"name": "Data flow1",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "retreive_API_data",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_PostData_transform",
+						"type": "DataFlowReference"
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			}
+		],
+		"parameters": {
+			"apiEndpoint": {
+				"type": "string",
+				"defaultValue": "https://jsonplaceholder.typicode.com/posts"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-05-30T19:04:55Z"
+	},
+	"type": "Microsoft.Synapse/workspaces/pipelines"
+}

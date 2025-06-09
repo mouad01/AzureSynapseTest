@@ -1,0 +1,29 @@
+{
+	"name": "ds_weatherJson_out",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"fileName": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": {
+					"value": "@dataset().fileName",
+					"type": "Expression"
+				},
+				"folderPath": "TrainingOutPut",
+				"fileSystem": "trainingdata"
+			}
+		},
+		"schema": {}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

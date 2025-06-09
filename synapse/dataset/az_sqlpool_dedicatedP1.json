@@ -1,0 +1,20 @@
+{
+	"name": "az_sqlpool_dedicatedP1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asa-workshop-first-test-WorkspaceDefaultSqlServer",
+			"type": "LinkedServiceReference",
+			"parameters": {
+				"DBName": "DedicatedP1"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlDWTable",
+		"schema": [],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "taxiData"
+		}
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

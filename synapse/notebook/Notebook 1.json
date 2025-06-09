@@ -1,0 +1,463 @@
+{
+	"name": "Notebook 1",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "SparkPool1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "648c3e26-80eb-4e1e-b2d6-6001fa5f927e"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1",
+				"state": {
+					"c005216b-23a6-4449-a632-404509eaae9b": {
+						"type": "Synapse.DataFrame",
+						"sync_state": {
+							"table": {
+								"rows": [
+									{
+										"0": "1",
+										"1": "2025-01-01 00:18:38",
+										"2": "2025-01-01 00:26:59",
+										"3": "1",
+										"4": "1.6",
+										"5": "1",
+										"6": "N",
+										"7": "229",
+										"8": "237",
+										"9": "1",
+										"10": "10.0",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "3.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "18.0",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "1",
+										"1": "2025-01-01 00:32:40",
+										"2": "2025-01-01 00:35:13",
+										"3": "1",
+										"4": "0.5",
+										"5": "1",
+										"6": "N",
+										"7": "236",
+										"8": "237",
+										"9": "1",
+										"10": "5.1",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "2.02",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "12.12",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "1",
+										"1": "2025-01-01 00:44:04",
+										"2": "2025-01-01 00:46:01",
+										"3": "1",
+										"4": "0.6",
+										"5": "1",
+										"6": "N",
+										"7": "141",
+										"8": "141",
+										"9": "1",
+										"10": "5.1",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "2.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "12.1",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "2",
+										"1": "2025-01-01 00:14:27",
+										"2": "2025-01-01 00:20:01",
+										"3": "3",
+										"4": "0.52",
+										"5": "1",
+										"6": "N",
+										"7": "244",
+										"8": "244",
+										"9": "2",
+										"10": "7.2",
+										"11": "1.0",
+										"12": "0.5",
+										"13": "0.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "9.7",
+										"17": "0.0",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "2",
+										"1": "2025-01-01 00:21:34",
+										"2": "2025-01-01 00:25:06",
+										"3": "3",
+										"4": "0.66",
+										"5": "1",
+										"6": "N",
+										"7": "244",
+										"8": "116",
+										"9": "2",
+										"10": "5.8",
+										"11": "1.0",
+										"12": "0.5",
+										"13": "0.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "8.3",
+										"17": "0.0",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "2",
+										"1": "2025-01-01 00:48:24",
+										"2": "2025-01-01 01:08:26",
+										"3": "2",
+										"4": "2.63",
+										"5": "1",
+										"6": "N",
+										"7": "239",
+										"8": "68",
+										"9": "2",
+										"10": "19.1",
+										"11": "1.0",
+										"12": "0.5",
+										"13": "0.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "24.1",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "1",
+										"1": "2025-01-01 00:14:47",
+										"2": "2025-01-01 00:16:15",
+										"3": "0",
+										"4": "0.4",
+										"5": "1",
+										"6": "N",
+										"7": "170",
+										"8": "170",
+										"9": "1",
+										"10": "4.4",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "2.35",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "11.75",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "1",
+										"1": "2025-01-01 00:39:27",
+										"2": "2025-01-01 00:51:51",
+										"3": "0",
+										"4": "1.6",
+										"5": "1",
+										"6": "N",
+										"7": "234",
+										"8": "148",
+										"9": "1",
+										"10": "12.1",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "2.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "19.1",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "1",
+										"1": "2025-01-01 00:53:43",
+										"2": "2025-01-01 01:13:23",
+										"3": "0",
+										"4": "2.8",
+										"5": "1",
+										"6": "N",
+										"7": "148",
+										"8": "170",
+										"9": "1",
+										"10": "19.1",
+										"11": "3.5",
+										"12": "0.5",
+										"13": "3.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "27.1",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									},
+									{
+										"0": "2",
+										"1": "2025-01-01 00:00:02",
+										"2": "2025-01-01 00:09:36",
+										"3": "1",
+										"4": "1.71",
+										"5": "1",
+										"6": "N",
+										"7": "237",
+										"8": "262",
+										"9": "2",
+										"10": "11.4",
+										"11": "1.0",
+										"12": "0.5",
+										"13": "0.0",
+										"14": "0.0",
+										"15": "1.0",
+										"16": "16.4",
+										"17": "2.5",
+										"18": "0.0",
+										"19": "0.0"
+									}
+								],
+								"schema": [
+									{
+										"key": "0",
+										"name": "VendorID",
+										"type": "int"
+									},
+									{
+										"key": "1",
+										"name": "tpep_pickup_datetime",
+										"type": "timestamp_ntz"
+									},
+									{
+										"key": "2",
+										"name": "tpep_dropoff_datetime",
+										"type": "timestamp_ntz"
+									},
+									{
+										"key": "3",
+										"name": "passenger_count",
+										"type": "bigint"
+									},
+									{
+										"key": "4",
+										"name": "trip_distance",
+										"type": "double"
+									},
+									{
+										"key": "5",
+										"name": "RatecodeID",
+										"type": "bigint"
+									},
+									{
+										"key": "6",
+										"name": "store_and_fwd_flag",
+										"type": "string"
+									},
+									{
+										"key": "7",
+										"name": "PULocationID",
+										"type": "int"
+									},
+									{
+										"key": "8",
+										"name": "DOLocationID",
+										"type": "int"
+									},
+									{
+										"key": "9",
+										"name": "payment_type",
+										"type": "bigint"
+									},
+									{
+										"key": "10",
+										"name": "fare_amount",
+										"type": "double"
+									},
+									{
+										"key": "11",
+										"name": "extra",
+										"type": "double"
+									},
+									{
+										"key": "12",
+										"name": "mta_tax",
+										"type": "double"
+									},
+									{
+										"key": "13",
+										"name": "tip_amount",
+										"type": "double"
+									},
+									{
+										"key": "14",
+										"name": "tolls_amount",
+										"type": "double"
+									},
+									{
+										"key": "15",
+										"name": "improvement_surcharge",
+										"type": "double"
+									},
+									{
+										"key": "16",
+										"name": "total_amount",
+										"type": "double"
+									},
+									{
+										"key": "17",
+										"name": "congestion_surcharge",
+										"type": "double"
+									},
+									{
+										"key": "18",
+										"name": "Airport_fee",
+										"type": "double"
+									},
+									{
+										"key": "19",
+										"name": "cbd_congestion_fee",
+										"type": "double"
+									}
+								],
+								"truncated": false
+							},
+							"isSummary": false,
+							"language": "scala",
+							"wranglerEntryContext": {
+								"dataframeType": "pyspark"
+							}
+						},
+						"persist_state": {
+							"view": {
+								"type": "details",
+								"chartOptions": {
+									"chartType": "bar",
+									"aggregationType": "sum",
+									"categoryFieldKeys": [
+										"3"
+									],
+									"seriesFieldKeys": [
+										"0"
+									],
+									"isStacked": false
+								}
+							}
+						}
+					}
+				}
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+				"name": "SparkPool1",
+				"type": "Spark",
+				"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"df = spark.read.load('abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TaxiData/yellow_tripdata_2025-01.parquet', format='parquet')\r\n",
+					"display(df.limit(10))"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					}
+				},
+				"source": [
+					"%%pyspark\r\n",
+					"df = spark.read.load('abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TaxiData/yellow_tripdata_2025-01.parquet', format='parquet')\r\n",
+					"\r\n",
+					"df.coalesce(1) \\\r\n",
+					"  .write \\\r\n",
+					"  .option(\"compression\", \"snappy\") \\\r\n",
+					"  .mode(\"overwrite\") \\\r\n",
+					"  .parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/SnappyDataSingle\")"
+				],
+				"execution_count": 4
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df.coalesce(1) \\\r\n",
+					"  .write \\\r\n",
+					"  .option(\"compression\", \"snappy\") \\\r\n",
+					"  .mode(\"overwrite\") \\\r\n",
+					"  .parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/SnappyDataSingle\")"
+				]
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# Extract month in 'yyyy-MM' format (e.g., 2024-05)\r\n",
+					"df_with_month = df.withColumn(\"puMonth\", date_format(col(\"tpep_pickup_datetime\"), \"yyyy-MM\"))\r\n",
+					"\r\n",
+					"# Write the data partitioned by month to a new location\r\n",
+					"df_with_month.write.mode(\"overwrite\").partitionBy(\"puMonth\").parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TrainingOutPut/partitionedData\")"
+				]
+			}
+		]
+	}
+}

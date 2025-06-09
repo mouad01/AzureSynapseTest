@@ -1,0 +1,83 @@
+{
+	"name": "Dataflow1",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "az_adls_dataset_in",
+						"type": "DatasetReference"
+					},
+					"name": "TaxiDataJan"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "az_ds_taxi_data_janv",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "rank1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          VendorID as integer,",
+				"          tpep_pickup_datetime as timestamp,",
+				"          tpep_dropoff_datetime as timestamp,",
+				"          passenger_count as long,",
+				"          trip_distance as double,",
+				"          RatecodeID as long,",
+				"          store_and_fwd_flag as string,",
+				"          PULocationID as integer,",
+				"          DOLocationID as integer,",
+				"          payment_type as long,",
+				"          fare_amount as double,",
+				"          extra as double,",
+				"          mta_tax as double,",
+				"          tip_amount as double,",
+				"          tolls_amount as double,",
+				"          improvement_surcharge as double,",
+				"          total_amount as double,",
+				"          congestion_surcharge as double,",
+				"          Airport_fee as double,",
+				"          cbd_congestion_fee as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> TaxiDataJan",
+				"TaxiDataJan aggregate(groupBy(VendorID),",
+				"     totalCountByVID = sum(passenger_count),",
+				"          totalTripDistance = sum(trip_distance)) ~> aggregate1",
+				"aggregate1 derive(AvrPsgByDitance = totalCountByVID/totalTripDistance) ~> derivedColumn1",
+				"derivedColumn1 rank(desc(totalTripDistance, true),",
+				"     output(RankDistance as long)) ~> rank1",
+				"rank1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     staged: true,",
+				"     allowCopyCommand: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+			]
+		}
+	}
+}

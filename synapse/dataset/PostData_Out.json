@@ -1,0 +1,22 @@
+{
+	"name": "PostData_Out",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "PostDataOut.Parquet/",
+				"folderPath": "temp",
+				"fileSystem": "trainingdata"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

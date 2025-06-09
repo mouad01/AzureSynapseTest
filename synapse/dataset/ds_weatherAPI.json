@@ -1,0 +1,16 @@
+{
+	"name": "ds_weatherAPI",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_weather_restAPI",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": "v1/forecast?latitude=48.8566&longitude=2.3522&daily=temperature_2m_max,windspeed_10m_max&timezone=auto"
+		},
+		"schema": []
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

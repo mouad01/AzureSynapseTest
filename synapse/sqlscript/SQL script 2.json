@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 2",
+	"properties": {
+		"content": {
+			"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT [Parquet_first_ws] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'trainingdata_asafirstworkshop_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [ADLS_myfirstworkshop] \n\tWITH (\n\t\tLOCATION = 'abfss://trainingdata@asafirstworkshop.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE dbo.taxiData (\n\t[VendorID] int,\n\t[tpep_pickup_datetime] datetime2(7),\n\t[tpep_dropoff_datetime] datetime2(7),\n\t[passenger_count] bigint,\n\t[trip_distance] float,\n\t[RatecodeID] bigint,\n\t[store_and_fwd_flag] nvarchar(4000),\n\t[PULocationID] int,\n\t[DOLocationID] int,\n\t[payment_type] bigint,\n\t[fare_amount] float,\n\t[extra] float,\n\t[mta_tax] float,\n\t[tip_amount] float,\n\t[tolls_amount] float,\n\t[improvement_surcharge] float,\n\t[total_amount] float,\n\t[congestion_surcharge] float,\n\t[Airport_fee] float,\n\t[cbd_congestion_fee] float\n\t)\n\tWITH (\n\tLOCATION = 'TrainingOutPut/partitionedData/*/*',\n\tDATA_SOURCE = [ADLS_myfirstworkshop],\n\tFILE_FORMAT = [Parquet_first_ws]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM dbo.taxiData\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "ServelessP1",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

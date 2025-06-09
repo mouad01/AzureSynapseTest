@@ -1,0 +1,114 @@
+{
+	"name": "nb_retreive_poste_API",
+	"properties": {
+		"nbformat": 4,
+		"nbformat_minor": 2,
+		"bigDataPool": {
+			"referenceName": "SparkPool1",
+			"type": "BigDataPoolReference"
+		},
+		"sessionProperties": {
+			"driverMemory": "28g",
+			"driverCores": 4,
+			"executorMemory": "28g",
+			"executorCores": 4,
+			"numExecutors": 2,
+			"runAsWorkspaceSystemIdentity": false,
+			"conf": {
+				"spark.dynamicAllocation.enabled": "false",
+				"spark.dynamicAllocation.minExecutors": "2",
+				"spark.dynamicAllocation.maxExecutors": "2",
+				"spark.autotune.trackingId": "20dccea4-857c-404b-98a6-939c279f5010"
+			}
+		},
+		"metadata": {
+			"saveOutput": true,
+			"synapse_widget": {
+				"version": "0.1"
+			},
+			"enableDebugMode": false,
+			"language_info": {
+				"name": "python"
+			},
+			"a365ComputeOptions": {
+				"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+				"name": "SparkPool1",
+				"type": "Spark",
+				"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+				"auth": {
+					"type": "AAD",
+					"authResource": "https://dev.azuresynapse.net",
+					"authHeader": null
+				},
+				"sparkVersion": "3.4",
+				"nodeCount": 10,
+				"cores": 4,
+				"memory": 28,
+				"extraHeader": null
+			},
+			"sessionKeepAliveTimeout": 30
+		},
+		"cells": [
+			{
+				"cell_type": "code",
+				"metadata": {
+					"microsoft": {
+						"language": "python"
+					},
+					"collapsed": false
+				},
+				"source": [
+					"%%pyspark\n",
+					"import requests\n",
+					"import pandas as pd\n",
+					"from pyspark.sql import SparkSession\n",
+					"\n",
+					"\n",
+					"# Get pipeline parameters with fallback for testing\n",
+					"try:\n",
+					"    api_url = spark.conf.get(\"pipeline.parameters.apiEndpoint\")\n",
+					"except:\n",
+					"    # Fallback for when running notebook directly (not via pipeline)\n",
+					"    api_url = \"https://jsonplaceholder.typicode.com/posts\" \n",
+					"    print(\"Using default API endpoint - if running in pipeline, check parameter configuration\")\n",
+					"\n",
+					"# Fetch data from JSONPlaceholder API\n",
+					"response = requests.get(api_url)\n",
+					"data = response.json()\n",
+					"\n",
+					"# Convert to pandas DataFrame then to Spark DataFrame\n",
+					"pdf = pd.DataFrame(data)\n",
+					"sdf = spark.createDataFrame(pdf)\n",
+					"\n",
+					"temp_path = 'abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/temp/api_rawPost_data.parquet'\n",
+					"sdf.write.mode(\"overwrite\").parquet(temp_path)\n",
+					"\n",
+					"print(f\"Intermediate data saved to {temp_path}\")\n",
+					"\n",
+					"# Display sample data\n",
+					"#display(sdf.limit(5))"
+				],
+				"execution_count": 1
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					""
+				]
+			},
+			{
+				"cell_type": "markdown",
+				"metadata": {
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					""
+				]
+			}
+		]
+	}
+}

@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 5",
+	"properties": {
+		"content": {
+			"query": "SELECT TOP (100) [VendorID]\n,[totalCountByVID]\n,[totalTripDistance]\n,[AvrPsgByDitance]\n,[RankDistance]\n FROM [dbo].[taxi_data_janv_converted]",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedP1",
+				"poolName": "DedicatedP1"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

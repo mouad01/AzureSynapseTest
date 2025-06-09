@@ -1,0 +1,103 @@
+{
+	"name": "az_adls_dataset_in",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "part-00003-77c609f8-ac1e-44ef-9850-26acbbbc9eb9-c000.snappy.parquet",
+				"folderPath": "SnappyDataSingleConverted/taxiData_janv.snappy.parquet",
+				"fileSystem": "trainingdata"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "VendorID",
+				"type": "INT32"
+			},
+			{
+				"name": "tpep_pickup_datetime",
+				"type": "INT96"
+			},
+			{
+				"name": "tpep_dropoff_datetime",
+				"type": "INT96"
+			},
+			{
+				"name": "passenger_count",
+				"type": "INT64"
+			},
+			{
+				"name": "trip_distance",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "RatecodeID",
+				"type": "INT64"
+			},
+			{
+				"name": "store_and_fwd_flag",
+				"type": "UTF8"
+			},
+			{
+				"name": "PULocationID",
+				"type": "INT32"
+			},
+			{
+				"name": "DOLocationID",
+				"type": "INT32"
+			},
+			{
+				"name": "payment_type",
+				"type": "INT64"
+			},
+			{
+				"name": "fare_amount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "extra",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "mta_tax",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "tip_amount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "tolls_amount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "improvement_surcharge",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "total_amount",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "congestion_surcharge",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "Airport_fee",
+				"type": "DOUBLE"
+			},
+			{
+				"name": "cbd_congestion_fee",
+				"type": "DOUBLE"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}

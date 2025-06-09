@@ -1,0 +1,38 @@
+{
+	"name": "API_PostData_Parquet",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "temp/api_rawPost_data.parquet",
+				"fileSystem": "trainingdata"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": [
+			{
+				"name": "userId",
+				"type": "INT64"
+			},
+			{
+				"name": "id",
+				"type": "INT64"
+			},
+			{
+				"name": "title",
+				"type": "UTF8"
+			},
+			{
+				"name": "body",
+				"type": "UTF8"
+			}
+		]
+	},
+	"type": "Microsoft.Synapse/workspaces/datasets"
+}
