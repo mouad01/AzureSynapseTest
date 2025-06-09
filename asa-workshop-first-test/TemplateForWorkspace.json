@@ -1,0 +1,1575 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "asa-workshop-first-test"
+		},
+		"ADLS_JsonPlaceHolder_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'ADLS_JsonPlaceHolder'"
+		},
+		"asa-workshop-first-test-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'asa-workshop-first-test-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:asa-workshop-first-test.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"linkedS_blob_staging_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'linkedS_blob_staging'"
+		},
+		"ADLS_JsonPlaceHolder_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asafirstworkshop.dfs.core.windows.net/"
+		},
+		"asa-workshop-first-test-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asafirstworkshop.dfs.core.windows.net"
+		},
+		"linkedS_blob_staging_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asafirstworkshop.dfs.core.windows.net/"
+		},
+		"ls_weather_restAPI_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.open-meteo.com"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/Load_API_data_posts')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "retreive_API_data",
+						"type": "SynapseNotebook",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"notebook": {
+								"referenceName": "nb_retreive_poste_API",
+								"type": "NotebookReference"
+							},
+							"parameters": {
+								"apiEndpoint": {
+									"value": {
+										"value": "@pipeline().parameters.apiEndpoint",
+										"type": "Expression"
+									},
+									"type": "string"
+								}
+							},
+							"snapshot": true,
+							"sparkPool": {
+								"referenceName": "SparkPool1",
+								"type": "BigDataPoolReference"
+							},
+							"executorSize": "Small",
+							"conf": {
+								"spark.dynamicAllocation.enabled": null,
+								"spark.dynamicAllocation.minExecutors": null,
+								"spark.dynamicAllocation.maxExecutors": null
+							},
+							"driverSize": "Small",
+							"numExecutors": null
+						}
+					},
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "retreive_API_data",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_PostData_transform",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"apiEndpoint": {
+						"type": "string",
+						"defaultValue": "https://jsonplaceholder.typicode.com/posts"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-05-30T19:04:55Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/notebooks/nb_retreive_poste_API')]",
+				"[concat(variables('workspaceId'), '/bigDataPools/SparkPool1')]",
+				"[concat(variables('workspaceId'), '/dataflows/df_PostData_transform')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Load_taxiData')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "Data flow1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ParquetSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "ParquetReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								},
+								"tableOption": "autoCreate",
+								"disableMetricsCollection": false
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "az_adls_dataset_in",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "az_sqlpool_dedicatedP1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "Dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"TaxiDataJan": {},
+									"sink1": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "trainingdata/TaxiData"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-05-28T16:22:34Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/az_adls_dataset_in')]",
+				"[concat(variables('workspaceId'), '/datasets/az_sqlpool_dedicatedP1')]",
+				"[concat(variables('workspaceId'), '/dataflows/Dataflow1')]",
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/API_PostData_Parquet')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "temp/api_rawPost_data.parquet",
+						"fileSystem": "trainingdata"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "userId",
+						"type": "INT64"
+					},
+					{
+						"name": "id",
+						"type": "INT64"
+					},
+					{
+						"name": "title",
+						"type": "UTF8"
+					},
+					{
+						"name": "body",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/PostData_Out')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "PostDataOut.Parquet/",
+						"folderPath": "temp",
+						"fileSystem": "trainingdata"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/az_adls_dataset_in')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "part-00003-77c609f8-ac1e-44ef-9850-26acbbbc9eb9-c000.snappy.parquet",
+						"folderPath": "SnappyDataSingleConverted/taxiData_janv.snappy.parquet",
+						"fileSystem": "trainingdata"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "VendorID",
+						"type": "INT32"
+					},
+					{
+						"name": "tpep_pickup_datetime",
+						"type": "INT96"
+					},
+					{
+						"name": "tpep_dropoff_datetime",
+						"type": "INT96"
+					},
+					{
+						"name": "passenger_count",
+						"type": "INT64"
+					},
+					{
+						"name": "trip_distance",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "RatecodeID",
+						"type": "INT64"
+					},
+					{
+						"name": "store_and_fwd_flag",
+						"type": "UTF8"
+					},
+					{
+						"name": "PULocationID",
+						"type": "INT32"
+					},
+					{
+						"name": "DOLocationID",
+						"type": "INT32"
+					},
+					{
+						"name": "payment_type",
+						"type": "INT64"
+					},
+					{
+						"name": "fare_amount",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "extra",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "mta_tax",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "tip_amount",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "tolls_amount",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "improvement_surcharge",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "total_amount",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "congestion_surcharge",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "Airport_fee",
+						"type": "DOUBLE"
+					},
+					{
+						"name": "cbd_congestion_fee",
+						"type": "DOUBLE"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/az_ds_taxi_data_janv')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultSqlServer",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"DBName": "DedicatedP1"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "taxi_data_janv_converted"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultSqlServer')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/az_sqlpool_dedicatedP1')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultSqlServer",
+					"type": "LinkedServiceReference",
+					"parameters": {
+						"DBName": "DedicatedP1"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "taxiData"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultSqlServer')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ds_weatherAPI')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_weather_restAPI",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": "v1/forecast?latitude=48.8566&longitude=2.3522&daily=temperature_2m_max,windspeed_10m_max&timezone=auto"
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/ls_weather_restAPI')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ds_weatherJson_out')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asa-workshop-first-test-WorkspaceDefaultStorage",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"fileName": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": {
+							"value": "@dataset().fileName",
+							"type": "Expression"
+						},
+						"folderPath": "TrainingOutPut",
+						"fileSystem": "trainingdata"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asa-workshop-first-test-WorkspaceDefaultStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ADLS_JsonPlaceHolder')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ADLS_JsonPlaceHolder_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('ADLS_JsonPlaceHolder_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asa-workshop-first-test-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('asa-workshop-first-test-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asa-workshop-first-test-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('asa-workshop-first-test-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/linkedS_blob_staging')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('linkedS_blob_staging_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('linkedS_blob_staging_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/ls_weather_restAPI')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('ls_weather_restAPI_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Dataflow1')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "az_adls_dataset_in",
+								"type": "DatasetReference"
+							},
+							"name": "TaxiDataJan"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "az_ds_taxi_data_janv",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "rank1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          VendorID as integer,",
+						"          tpep_pickup_datetime as timestamp,",
+						"          tpep_dropoff_datetime as timestamp,",
+						"          passenger_count as long,",
+						"          trip_distance as double,",
+						"          RatecodeID as long,",
+						"          store_and_fwd_flag as string,",
+						"          PULocationID as integer,",
+						"          DOLocationID as integer,",
+						"          payment_type as long,",
+						"          fare_amount as double,",
+						"          extra as double,",
+						"          mta_tax as double,",
+						"          tip_amount as double,",
+						"          tolls_amount as double,",
+						"          improvement_surcharge as double,",
+						"          total_amount as double,",
+						"          congestion_surcharge as double,",
+						"          Airport_fee as double,",
+						"          cbd_congestion_fee as double",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> TaxiDataJan",
+						"TaxiDataJan aggregate(groupBy(VendorID),",
+						"     totalCountByVID = sum(passenger_count),",
+						"          totalTripDistance = sum(trip_distance)) ~> aggregate1",
+						"aggregate1 derive(AvrPsgByDitance = totalCountByVID/totalTripDistance) ~> derivedColumn1",
+						"derivedColumn1 rank(desc(totalTripDistance, true),",
+						"     output(RankDistance as long)) ~> rank1",
+						"rank1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     format: 'table',",
+						"     staged: true,",
+						"     allowCopyCommand: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/az_adls_dataset_in')]",
+				"[concat(variables('workspaceId'), '/datasets/az_ds_taxi_data_janv')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_PostData_transform')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "API_PostData_Parquet",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "PostData_Out",
+								"type": "DatasetReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "cleanDescription"
+						},
+						{
+							"name": "filter1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          userId as long,",
+						"          id as long,",
+						"          title as string,",
+						"          body as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet') ~> source1",
+						"source1 derive(body = regexReplace(body, '<[^>]+>', '')) ~> cleanDescription",
+						"cleanDescription filter(length(trim(title)) > 0) ~> filter1",
+						"filter1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'parquet',",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/API_PostData_Parquet')]",
+				"[concat(variables('workspaceId'), '/datasets/PostData_Out')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://asafirstworkshop.dfs.core.windows.net/trainingdata/TrainingOutPut/partitionedData/puMonth=2024-12/*',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT [Parquet_first_ws] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'trainingdata_asafirstworkshop_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [ADLS_myfirstworkshop] \n\tWITH (\n\t\tLOCATION = 'abfss://trainingdata@asafirstworkshop.dfs.core.windows.net' \n\t)\nGO\n\nCREATE EXTERNAL TABLE dbo.taxiData (\n\t[VendorID] int,\n\t[tpep_pickup_datetime] datetime2(7),\n\t[tpep_dropoff_datetime] datetime2(7),\n\t[passenger_count] bigint,\n\t[trip_distance] float,\n\t[RatecodeID] bigint,\n\t[store_and_fwd_flag] nvarchar(4000),\n\t[PULocationID] int,\n\t[DOLocationID] int,\n\t[payment_type] bigint,\n\t[fare_amount] float,\n\t[extra] float,\n\t[mta_tax] float,\n\t[tip_amount] float,\n\t[tolls_amount] float,\n\t[improvement_surcharge] float,\n\t[total_amount] float,\n\t[congestion_surcharge] float,\n\t[Airport_fee] float,\n\t[cbd_congestion_fee] float\n\t)\n\tWITH (\n\tLOCATION = 'TrainingOutPut/partitionedData/*/*',\n\tDATA_SOURCE = [ADLS_myfirstworkshop],\n\tFILE_FORMAT = [Parquet_first_ws]\n\t)\nGO\n\n\nSELECT TOP 100 * FROM dbo.taxiData\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "ServelessP1",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) [VendorID]\n,[tpep_pickup_datetime]\n,[tpep_dropoff_datetime]\n,[passenger_count]\n,[trip_distance]\n,[RatecodeID]\n,[store_and_fwd_flag]\n,[PULocationID]\n,[DOLocationID]\n,[payment_type]\n,[fare_amount]\n,[extra]\n,[mta_tax]\n,[tip_amount]\n,[tolls_amount]\n,[improvement_surcharge]\n,[total_amount]\n,[congestion_surcharge]\n,[Airport_fee]\n,[cbd_congestion_fee]\n FROM [dbo].[taxiData]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "ServelessP1",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) [VendorID]\n,[tpep_pickup_datetime]\n,[tpep_dropoff_datetime]\n,[passenger_count]\n,[trip_distance]\n,[RatecodeID]\n,[store_and_fwd_flag]\n,[PULocationID]\n,[DOLocationID]\n,[payment_type]\n,[fare_amount]\n,[extra]\n,[mta_tax]\n,[tip_amount]\n,[tolls_amount]\n,[improvement_surcharge]\n,[total_amount]\n,[congestion_surcharge]\n,[Airport_fee]\n,[cbd_congestion_fee]\n FROM [dbo].[taxiData]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedP1",
+						"poolName": "DedicatedP1"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) [VendorID]\n,[totalCountByVID]\n,[totalTripDistance]\n,[AvrPsgByDitance]\n,[RankDistance]\n FROM [dbo].[taxi_data_janv_converted]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedP1",
+						"poolName": "DedicatedP1"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 6')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT\n    TOP 100 *\nFROM\n    OPENROWSET(\n        BULK 'https://asafirstworkshop.dfs.core.windows.net/trainingdata/temp/part-00000-6bd9d179-6497-418c-bfb0-b7af1c6293ef-c000.snappy.parquet',\n        FORMAT = 'PARQUET'\n    ) AS [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Notebook 1')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "SparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "648c3e26-80eb-4e1e-b2d6-6001fa5f927e"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1",
+						"state": {
+							"c005216b-23a6-4449-a632-404509eaae9b": {
+								"type": "Synapse.DataFrame",
+								"sync_state": {
+									"table": {
+										"rows": [
+											{
+												"0": "1",
+												"1": "2025-01-01 00:18:38",
+												"2": "2025-01-01 00:26:59",
+												"3": "1",
+												"4": "1.6",
+												"5": "1",
+												"6": "N",
+												"7": "229",
+												"8": "237",
+												"9": "1",
+												"10": "10.0",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "3.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "18.0",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "1",
+												"1": "2025-01-01 00:32:40",
+												"2": "2025-01-01 00:35:13",
+												"3": "1",
+												"4": "0.5",
+												"5": "1",
+												"6": "N",
+												"7": "236",
+												"8": "237",
+												"9": "1",
+												"10": "5.1",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "2.02",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "12.12",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "1",
+												"1": "2025-01-01 00:44:04",
+												"2": "2025-01-01 00:46:01",
+												"3": "1",
+												"4": "0.6",
+												"5": "1",
+												"6": "N",
+												"7": "141",
+												"8": "141",
+												"9": "1",
+												"10": "5.1",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "2.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "12.1",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "2",
+												"1": "2025-01-01 00:14:27",
+												"2": "2025-01-01 00:20:01",
+												"3": "3",
+												"4": "0.52",
+												"5": "1",
+												"6": "N",
+												"7": "244",
+												"8": "244",
+												"9": "2",
+												"10": "7.2",
+												"11": "1.0",
+												"12": "0.5",
+												"13": "0.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "9.7",
+												"17": "0.0",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "2",
+												"1": "2025-01-01 00:21:34",
+												"2": "2025-01-01 00:25:06",
+												"3": "3",
+												"4": "0.66",
+												"5": "1",
+												"6": "N",
+												"7": "244",
+												"8": "116",
+												"9": "2",
+												"10": "5.8",
+												"11": "1.0",
+												"12": "0.5",
+												"13": "0.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "8.3",
+												"17": "0.0",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "2",
+												"1": "2025-01-01 00:48:24",
+												"2": "2025-01-01 01:08:26",
+												"3": "2",
+												"4": "2.63",
+												"5": "1",
+												"6": "N",
+												"7": "239",
+												"8": "68",
+												"9": "2",
+												"10": "19.1",
+												"11": "1.0",
+												"12": "0.5",
+												"13": "0.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "24.1",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "1",
+												"1": "2025-01-01 00:14:47",
+												"2": "2025-01-01 00:16:15",
+												"3": "0",
+												"4": "0.4",
+												"5": "1",
+												"6": "N",
+												"7": "170",
+												"8": "170",
+												"9": "1",
+												"10": "4.4",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "2.35",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "11.75",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "1",
+												"1": "2025-01-01 00:39:27",
+												"2": "2025-01-01 00:51:51",
+												"3": "0",
+												"4": "1.6",
+												"5": "1",
+												"6": "N",
+												"7": "234",
+												"8": "148",
+												"9": "1",
+												"10": "12.1",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "2.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "19.1",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "1",
+												"1": "2025-01-01 00:53:43",
+												"2": "2025-01-01 01:13:23",
+												"3": "0",
+												"4": "2.8",
+												"5": "1",
+												"6": "N",
+												"7": "148",
+												"8": "170",
+												"9": "1",
+												"10": "19.1",
+												"11": "3.5",
+												"12": "0.5",
+												"13": "3.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "27.1",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											},
+											{
+												"0": "2",
+												"1": "2025-01-01 00:00:02",
+												"2": "2025-01-01 00:09:36",
+												"3": "1",
+												"4": "1.71",
+												"5": "1",
+												"6": "N",
+												"7": "237",
+												"8": "262",
+												"9": "2",
+												"10": "11.4",
+												"11": "1.0",
+												"12": "0.5",
+												"13": "0.0",
+												"14": "0.0",
+												"15": "1.0",
+												"16": "16.4",
+												"17": "2.5",
+												"18": "0.0",
+												"19": "0.0"
+											}
+										],
+										"schema": [
+											{
+												"key": "0",
+												"name": "VendorID",
+												"type": "int"
+											},
+											{
+												"key": "1",
+												"name": "tpep_pickup_datetime",
+												"type": "timestamp_ntz"
+											},
+											{
+												"key": "2",
+												"name": "tpep_dropoff_datetime",
+												"type": "timestamp_ntz"
+											},
+											{
+												"key": "3",
+												"name": "passenger_count",
+												"type": "bigint"
+											},
+											{
+												"key": "4",
+												"name": "trip_distance",
+												"type": "double"
+											},
+											{
+												"key": "5",
+												"name": "RatecodeID",
+												"type": "bigint"
+											},
+											{
+												"key": "6",
+												"name": "store_and_fwd_flag",
+												"type": "string"
+											},
+											{
+												"key": "7",
+												"name": "PULocationID",
+												"type": "int"
+											},
+											{
+												"key": "8",
+												"name": "DOLocationID",
+												"type": "int"
+											},
+											{
+												"key": "9",
+												"name": "payment_type",
+												"type": "bigint"
+											},
+											{
+												"key": "10",
+												"name": "fare_amount",
+												"type": "double"
+											},
+											{
+												"key": "11",
+												"name": "extra",
+												"type": "double"
+											},
+											{
+												"key": "12",
+												"name": "mta_tax",
+												"type": "double"
+											},
+											{
+												"key": "13",
+												"name": "tip_amount",
+												"type": "double"
+											},
+											{
+												"key": "14",
+												"name": "tolls_amount",
+												"type": "double"
+											},
+											{
+												"key": "15",
+												"name": "improvement_surcharge",
+												"type": "double"
+											},
+											{
+												"key": "16",
+												"name": "total_amount",
+												"type": "double"
+											},
+											{
+												"key": "17",
+												"name": "congestion_surcharge",
+												"type": "double"
+											},
+											{
+												"key": "18",
+												"name": "Airport_fee",
+												"type": "double"
+											},
+											{
+												"key": "19",
+												"name": "cbd_congestion_fee",
+												"type": "double"
+											}
+										],
+										"truncated": false
+									},
+									"isSummary": false,
+									"language": "scala",
+									"wranglerEntryContext": {
+										"dataframeType": "pyspark"
+									}
+								},
+								"persist_state": {
+									"view": {
+										"type": "details",
+										"chartOptions": {
+											"chartType": "bar",
+											"aggregationType": "sum",
+											"categoryFieldKeys": [
+												"3"
+											],
+											"seriesFieldKeys": [
+												"0"
+											],
+											"isStacked": false
+										}
+									}
+								}
+							}
+						}
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+						"name": "SparkPool1",
+						"type": "Spark",
+						"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"df = spark.read.load('abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TaxiData/yellow_tripdata_2025-01.parquet', format='parquet')\r\n",
+							"display(df.limit(10))"
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python"
+							}
+						},
+						"source": [
+							"%%pyspark\r\n",
+							"df = spark.read.load('abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TaxiData/yellow_tripdata_2025-01.parquet', format='parquet')\r\n",
+							"\r\n",
+							"df.coalesce(1) \\\r\n",
+							"  .write \\\r\n",
+							"  .option(\"compression\", \"snappy\") \\\r\n",
+							"  .mode(\"overwrite\") \\\r\n",
+							"  .parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/SnappyDataSingle\")"
+						],
+						"outputs": [],
+						"execution_count": 4
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"df.coalesce(1) \\\r\n",
+							"  .write \\\r\n",
+							"  .option(\"compression\", \"snappy\") \\\r\n",
+							"  .mode(\"overwrite\") \\\r\n",
+							"  .parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/SnappyDataSingle\")"
+						],
+						"outputs": []
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"# Extract month in 'yyyy-MM' format (e.g., 2024-05)\r\n",
+							"df_with_month = df.withColumn(\"puMonth\", date_format(col(\"tpep_pickup_datetime\"), \"yyyy-MM\"))\r\n",
+							"\r\n",
+							"# Write the data partitioned by month to a new location\r\n",
+							"df_with_month.write.mode(\"overwrite\").partitionBy(\"puMonth\").parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TrainingOutPut/partitionedData\")"
+						],
+						"outputs": []
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/nb_retreive_poste_API')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "SparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"runAsWorkspaceSystemIdentity": false,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "20dccea4-857c-404b-98a6-939c279f5010"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"synapse_widget": {
+						"version": "0.1"
+					},
+					"enableDebugMode": false,
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+						"name": "SparkPool1",
+						"type": "Spark",
+						"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net",
+							"authHeader": null
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"extraHeader": null
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {
+							"microsoft": {
+								"language": "python"
+							},
+							"collapsed": false
+						},
+						"source": [
+							"%%pyspark\n",
+							"import requests\n",
+							"import pandas as pd\n",
+							"from pyspark.sql import SparkSession\n",
+							"\n",
+							"\n",
+							"# Get pipeline parameters with fallback for testing\n",
+							"try:\n",
+							"    api_url = spark.conf.get(\"pipeline.parameters.apiEndpoint\")\n",
+							"except:\n",
+							"    # Fallback for when running notebook directly (not via pipeline)\n",
+							"    api_url = \"https://jsonplaceholder.typicode.com/posts\" \n",
+							"    print(\"Using default API endpoint - if running in pipeline, check parameter configuration\")\n",
+							"\n",
+							"# Fetch data from JSONPlaceholder API\n",
+							"response = requests.get(api_url)\n",
+							"data = response.json()\n",
+							"\n",
+							"# Convert to pandas DataFrame then to Spark DataFrame\n",
+							"pdf = pd.DataFrame(data)\n",
+							"sdf = spark.createDataFrame(pdf)\n",
+							"\n",
+							"temp_path = 'abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/temp/api_rawPost_data.parquet'\n",
+							"sdf.write.mode(\"overwrite\").parquet(temp_path)\n",
+							"\n",
+							"print(f\"Intermediate data saved to {temp_path}\")\n",
+							"\n",
+							"# Display sample data\n",
+							"#display(sdf.limit(5))"
+						],
+						"outputs": [],
+						"execution_count": 1
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							""
+						],
+						"outputs": []
+					},
+					{
+						"cell_type": "markdown",
+						"metadata": {
+							"nteract": {
+								"transient": {
+									"deleting": false
+								}
+							}
+						},
+						"source": [
+							""
+						]
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SparkPool1')]",
+			"type": "Microsoft.Synapse/workspaces/bigDataPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"autoPause": {
+					"enabled": true,
+					"delayInMinutes": 15
+				},
+				"autoScale": {
+					"enabled": true,
+					"maxNodeCount": 10,
+					"minNodeCount": 3
+				},
+				"nodeCount": 10,
+				"nodeSize": "Small",
+				"nodeSizeFamily": "MemoryOptimized",
+				"sparkVersion": "3.4",
+				"isComputeIsolationEnabled": false,
+				"sessionLevelPackagesEnabled": false,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "francecentral"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DedicatedP1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"collation": "SQL_Latin1_General_CP1_CI_AS",
+				"maxSizeBytes": 263882790666240,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "francecentral"
+		}
+	]
+}

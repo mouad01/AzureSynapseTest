@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "asa-workshop-first-test"
+		},
+		"ADLS_JsonPlaceHolder_accountKey": {
+			"value": ""
+		},
+		"asa-workshop-first-test-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:asa-workshop-first-test.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"linkedS_blob_staging_accountKey": {
+			"value": ""
+		},
+		"ADLS_JsonPlaceHolder_properties_typeProperties_url": {
+			"value": "https://asafirstworkshop.dfs.core.windows.net/"
+		},
+		"asa-workshop-first-test-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://asafirstworkshop.dfs.core.windows.net"
+		},
+		"linkedS_blob_staging_properties_typeProperties_url": {
+			"value": "https://asafirstworkshop.dfs.core.windows.net/"
+		},
+		"ls_weather_restAPI_properties_typeProperties_url": {
+			"value": "https://api.open-meteo.com"
+		}
+	}
+}
