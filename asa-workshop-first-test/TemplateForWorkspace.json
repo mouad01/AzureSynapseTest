@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'ADLS_JsonPlaceHolder'"
 		},
+		"EventHubBlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'EventHubBlobStorage'"
+		},
 		"asa-workshop-first-test-WorkspaceDefaultSqlServer_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'asa-workshop-first-test-WorkspaceDefaultSqlServer'",
@@ -571,6 +575,25 @@
 						"type": "SecureString",
 						"value": "[parameters('ADLS_JsonPlaceHolder_accountKey')]"
 					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/EventHubBlobStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('EventHubBlobStorage_connectionString')]"
 				},
 				"connectVia": {
 					"referenceName": "AutoResolveIntegrationRuntime",
@@ -1473,6 +1496,87 @@
 							"df_with_month.write.mode(\"overwrite\").partitionBy(\"puMonth\").parquet(\"abfss://trainingdata@asafirstworkshop.dfs.core.windows.net/TrainingOutPut/partitionedData\")"
 						],
 						"outputs": []
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Notebook 2')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "SparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "84c9120d-d36f-4e94-80ed-1a24c966fae1"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "Synapse PySpark"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+						"name": "SparkPool1",
+						"type": "Spark",
+						"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
+							"\n",
+							"df_raw_all = spark.read \\\n",
+							"    .format(\"avro\") \\\n",
+							"    .option(\"recursiveFileLookup\", \"true\") \\\n",
+							"    .load(avro_path_all_partitions)\n",
+							"\n",
+							"df_raw_all.show(5)"
+						],
+						"outputs": [],
+						"execution_count": 7
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"df_raw_all.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": null
 					}
 				]
 			},

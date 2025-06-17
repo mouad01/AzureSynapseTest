@@ -8,6 +8,9 @@
 		"ADLS_JsonPlaceHolder_accountKey": {
 			"value": ""
 		},
+		"EventHubBlobStorage_connectionString": {
+			"value": ""
+		},
 		"asa-workshop-first-test-WorkspaceDefaultSqlServer_connectionString": {
 			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:asa-workshop-first-test.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
 		},
