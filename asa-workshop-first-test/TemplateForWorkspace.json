@@ -1522,7 +1522,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "84c9120d-d36f-4e94-80ed-1a24c966fae1"
+						"spark.autotune.trackingId": "2dfedbd9-b863-4619-87e5-d4ffe280b41c"
 					}
 				},
 				"metadata": {
@@ -1574,6 +1574,65 @@
 						"metadata": {},
 						"source": [
 							"df_raw_all.printSchema()"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"from pyspark.sql.functions import col, from_json\n",
+							"from pyspark.sql.types import StructType, StructField, StringType"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"# Define expected schema for JSON inside Body\n",
+							"body_schema = StructType([\n",
+							"    StructField(\"time\", StringType()),\n",
+							"    StructField(\"operationName\", StringType()),\n",
+							"    StructField(\"category\", StringType()),\n",
+							"    StructField(\"resourceId\", StringType()),\n",
+							"    StructField(\"level\", StringType()),\n",
+							"    StructField(\"location\", StringType())\n",
+							"])"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"# Parse the Body column from binary to JSON and extract fields\n",
+							"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
+							"\n",
+							"# Select useful fields\n",
+							"df_clean = df_parsed.select(\n",
+							"    col(\"log.time\").alias(\"LogTime\"),\n",
+							"    col(\"log.operationName\").alias(\"Operation\"),\n",
+							"    col(\"log.category\").alias(\"Category\"),\n",
+							"    col(\"log.level\").alias(\"Severity\"),\n",
+							"    col(\"log.resourceId\").alias(\"ResourceId\"),\n",
+							"    col(\"log.location\").alias(\"Location\")\n",
+							")\n",
+							"\n",
+							"# Show cleaned data\n",
+							"df_clean.show(10)"
+						],
+						"outputs": [],
+						"execution_count": null
+					},
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							""
 						],
 						"outputs": [],
 						"execution_count": null
@@ -1712,7 +1771,7 @@
 				},
 				"autoScale": {
 					"enabled": true,
-					"maxNodeCount": 10,
+					"maxNodeCount": 17,
 					"minNodeCount": 3
 				},
 				"nodeCount": 10,
