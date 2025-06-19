@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "fff795d1-0bb2-412c-b79b-a8fbaf1a5337"
+				"spark.autotune.trackingId": "51b5c8db-9a34-4f8e-9bbe-3925344db857"
 			}
 		},
 		"metadata": {
@@ -53,19 +53,19 @@
 				"source": [
 					"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
 					"\n",
-					"df_raw_all = spark.read \\\n",
+					"df_raw = spark.read \\\n",
 					"    .format(\"avro\") \\\n",
 					"    .option(\"recursiveFileLookup\", \"true\") \\\n",
 					"    .load(avro_path_all_partitions)\n",
 					"\n",
-					"df_raw_all.show(5)"
+					"df_raw.show(5)"
 				],
-				"execution_count": 7
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
 				"source": [
-					"df_raw_all.printSchema()"
+					"df_raw.printSchema()"
 				],
 				"execution_count": null
 			},
@@ -110,6 +110,14 @@
 					"\n",
 					"# Show cleaned data\n",
 					"df_clean.show(10)"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
+					"df_clean_with_time.show(5)"
 				],
 				"execution_count": null
 			}
