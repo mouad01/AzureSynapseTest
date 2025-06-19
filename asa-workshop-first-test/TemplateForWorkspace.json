@@ -992,6 +992,26 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 7')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE TABLE dbo.EventHubLogs (\n    LogTime NVARCHAR(100),\n    Operation NVARCHAR(200),\n    Category NVARCHAR(100),\n    Severity NVARCHAR(50),\n    ResourceId NVARCHAR(500),\n    Location NVARCHAR(100)\n)\n\n\n\nselect * from dbo.EventHubLogs",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedP1",
+						"poolName": "DedicatedP1"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/brandnew_sqlscript')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -1522,7 +1542,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "3d9787ff-03d2-4683-85ef-594ccef77046"
+						"spark.autotune.trackingId": "fca3f304-df86-4e00-9135-cb97ad7b0e8a"
 					}
 				},
 				"metadata": {
@@ -1547,15 +1567,13 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
 							"\n",
@@ -1567,30 +1585,27 @@
 							"df_raw.show(5)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 9
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_raw.printSchema()"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 10
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"from pyspark.sql.functions import col, from_json\n",
 							"from pyspark.sql.types import StructType, StructField, StringType"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 11
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"# Define expected schema for JSON inside Body\n",
 							"body_schema = StructType([\n",
@@ -1603,11 +1618,10 @@
 							"])"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 12
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"# Parse the Body column from binary to JSON and extract fields\n",
 							"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
@@ -1626,14 +1640,26 @@
 							"df_clean.show(10)"
 						],
 						"outputs": [],
-						"execution_count": null
+						"execution_count": 13
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
+						"metadata": {
+							"jupyter": {
+								"outputs_hidden": true
+							}
+						},
 						"source": [
 							"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
 							"df_clean_with_time.show(5)"
+						],
+						"outputs": [],
+						"execution_count": 14
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							""
 						],
 						"outputs": [],
 						"execution_count": null
