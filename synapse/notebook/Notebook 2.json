@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "6bb5f270-e109-41be-af30-ff481a972b15"
+				"spark.autotune.trackingId": "fff795d1-0bb2-412c-b79b-a8fbaf1a5337"
 			}
 		},
 		"metadata": {
@@ -66,6 +66,50 @@
 				"cell_type": "code",
 				"source": [
 					"df_raw_all.printSchema()"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"from pyspark.sql.functions import col, from_json\n",
+					"from pyspark.sql.types import StructType, StructField, StringType"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# Define expected schema for JSON inside Body\n",
+					"body_schema = StructType([\n",
+					"    StructField(\"time\", StringType()),\n",
+					"    StructField(\"operationName\", StringType()),\n",
+					"    StructField(\"category\", StringType()),\n",
+					"    StructField(\"resourceId\", StringType()),\n",
+					"    StructField(\"level\", StringType()),\n",
+					"    StructField(\"location\", StringType())\n",
+					"])"
+				],
+				"execution_count": null
+			},
+			{
+				"cell_type": "code",
+				"source": [
+					"# Parse the Body column from binary to JSON and extract fields\n",
+					"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
+					"\n",
+					"# Select useful fields\n",
+					"df_clean = df_parsed.select(\n",
+					"    col(\"log.time\").alias(\"LogTime\"),\n",
+					"    col(\"log.operationName\").alias(\"Operation\"),\n",
+					"    col(\"log.category\").alias(\"Category\"),\n",
+					"    col(\"log.level\").alias(\"Severity\"),\n",
+					"    col(\"log.resourceId\").alias(\"ResourceId\"),\n",
+					"    col(\"log.location\").alias(\"Location\")\n",
+					")\n",
+					"\n",
+					"# Show cleaned data\n",
+					"df_clean.show(10)"
 				],
 				"execution_count": null
 			}
