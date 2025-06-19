@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "51b5c8db-9a34-4f8e-9bbe-3925344db857"
+				"spark.autotune.trackingId": "fca3f304-df86-4e00-9135-cb97ad7b0e8a"
 			}
 		},
 		"metadata": {
@@ -60,14 +60,14 @@
 					"\n",
 					"df_raw.show(5)"
 				],
-				"execution_count": null
+				"execution_count": 9
 			},
 			{
 				"cell_type": "code",
 				"source": [
 					"df_raw.printSchema()"
 				],
-				"execution_count": null
+				"execution_count": 10
 			},
 			{
 				"cell_type": "code",
@@ -75,7 +75,7 @@
 					"from pyspark.sql.functions import col, from_json\n",
 					"from pyspark.sql.types import StructType, StructField, StringType"
 				],
-				"execution_count": null
+				"execution_count": 11
 			},
 			{
 				"cell_type": "code",
@@ -90,7 +90,7 @@
 					"    StructField(\"location\", StringType())\n",
 					"])"
 				],
-				"execution_count": null
+				"execution_count": 12
 			},
 			{
 				"cell_type": "code",
@@ -111,13 +111,25 @@
 					"# Show cleaned data\n",
 					"df_clean.show(10)"
 				],
-				"execution_count": null
+				"execution_count": 13
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"outputs_hidden": true
+					}
+				},
+				"source": [
+					"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
+					"df_clean_with_time.show(5)"
+				],
+				"execution_count": 14
 			},
 			{
 				"cell_type": "code",
 				"source": [
-					"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
-					"df_clean_with_time.show(5)"
+					""
 				],
 				"execution_count": null
 			}

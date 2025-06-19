@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 7",
+	"properties": {
+		"content": {
+			"query": "CREATE TABLE dbo.EventHubLogs (\n    LogTime NVARCHAR(100),\n    Operation NVARCHAR(200),\n    Category NVARCHAR(100),\n    Severity NVARCHAR(50),\n    ResourceId NVARCHAR(500),\n    Location NVARCHAR(100)\n)\n\n\n\nselect * from dbo.EventHubLogs",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedP1",
+				"poolName": "DedicatedP1"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
