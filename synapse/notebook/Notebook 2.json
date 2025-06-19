@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "fca3f304-df86-4e00-9135-cb97ad7b0e8a"
+				"spark.autotune.trackingId": "19f811e6-1fdb-4a13-aafa-e108459c06e2"
 			}
 		},
 		"metadata": {
@@ -121,8 +121,31 @@
 					}
 				},
 				"source": [
-					"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
-					"df_clean_with_time.show(5)"
+					"# Step 1: Add the SQL connector to Spark session\n",
+					"from pyspark.sql import SparkSession\n",
+					"\n",
+					"spark = SparkSession.builder \\\n",
+					"    .appName(\"WriteToSQL\") \\\n",
+					"    .config(\"spark.jars.packages\", \"com.microsoft.azure:spark-mssql-connector_2.12:1.2.0\") \\\n",
+					"    .getOrCreate()\n",
+					"\n",
+					"# Step 2: Define connection info\n",
+					"workspace_name = \"asa-workshop-first-test\"\n",
+					"sql_pool_name = \"DedicatedP1\"\n",
+					"username = \"sqladminuser@asa-workshop-first-test\"  # ← Your SQL admin username\n",
+					"password = \"Passuneverc022/#\"\n",
+					"\n",
+					"jdbc_url = f\"jdbc:sqlserver://{workspace_name}.sql.azuresynapse.net:1433;databaseName={sql_pool_name};user={username};password={password};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.sql.azuresynapse.net;loginTimeout=30;\"\n",
+					"\n",
+					"# Step 3: Write DataFrame to SQL pool\n",
+					"df_clean.write \\\n",
+					"    .format(\"com.microsoft.sqlserver.jdbc.spark\") \\\n",
+					"    .mode(\"append\") \\\n",
+					"    .option(\"url\", jdbc_url) \\\n",
+					"    .option(\"dbtable\", \"dbo.EventHubLogs\") \\\n",
+					"    .save()\n",
+					"\n",
+					"print(\"✅ Successfully wrote data to SQL pool!\")"
 				],
 				"execution_count": 14
 			},
