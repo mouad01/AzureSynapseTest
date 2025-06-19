@@ -1542,7 +1542,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "fca3f304-df86-4e00-9135-cb97ad7b0e8a"
+						"spark.autotune.trackingId": "04246573-4369-45b8-9d5f-4114da41e1cd"
 					}
 				},
 				"metadata": {
@@ -1567,13 +1567,15 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28
+						"memory": 28,
+						"automaticScaleJobs": false
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
 							"\n",
@@ -1589,6 +1591,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"df_raw.printSchema()"
 						],
@@ -1597,6 +1600,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"from pyspark.sql.functions import col, from_json\n",
 							"from pyspark.sql.types import StructType, StructField, StringType"
@@ -1606,6 +1610,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"# Define expected schema for JSON inside Body\n",
 							"body_schema = StructType([\n",
@@ -1622,6 +1627,7 @@
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							"# Parse the Body column from binary to JSON and extract fields\n",
 							"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
@@ -1650,14 +1656,38 @@
 							}
 						},
 						"source": [
-							"df_clean_with_time = df_clean.withColumn(\"ReceivedAt\", col(\"EnqueuedTimeUtc\"))\n",
-							"df_clean_with_time.show(5)"
+							"# Step 1: Add the SQL connector to Spark session\n",
+							"from pyspark.sql import SparkSession\n",
+							"\n",
+							"spark = SparkSession.builder \\\n",
+							"    .appName(\"WriteToSQL\") \\\n",
+							"    .config(\"spark.jars.packages\", \"com.microsoft.azure:spark-mssql-connector_2.12:1.2.0\") \\\n",
+							"    .getOrCreate()\n",
+							"\n",
+							"# Step 2: Define connection info\n",
+							"workspace_name = \"asa-workshop-first-test\"\n",
+							"sql_pool_name = \"DedicatedP1\"\n",
+							"username = \"sqladminuser@asa-workshop-first-test\"  # ← Your SQL admin username\n",
+							"password = \"Passuneverc022/#\"\n",
+							"\n",
+							"jdbc_url = f\"jdbc:sqlserver://{workspace_name}.sql.azuresynapse.net:1433;databaseName={sql_pool_name};user={username};password={password};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.sql.azuresynapse.net;loginTimeout=30;\"\n",
+							"\n",
+							"# Step 3: Write DataFrame to SQL pool\n",
+							"df_clean.write \\\n",
+							"    .format(\"com.microsoft.sqlserver.jdbc.spark\") \\\n",
+							"    .mode(\"append\") \\\n",
+							"    .option(\"url\", jdbc_url) \\\n",
+							"    .option(\"dbtable\", \"dbo.EventHubLogs\") \\\n",
+							"    .save()\n",
+							"\n",
+							"print(\"✅ Successfully wrote data to SQL pool!\")"
 						],
 						"outputs": [],
 						"execution_count": 14
 					},
 					{
 						"cell_type": "code",
+						"metadata": {},
 						"source": [
 							""
 						],
