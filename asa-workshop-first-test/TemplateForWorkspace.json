@@ -1542,7 +1542,7 @@
 						"spark.dynamicAllocation.enabled": "false",
 						"spark.dynamicAllocation.minExecutors": "2",
 						"spark.dynamicAllocation.maxExecutors": "2",
-						"spark.autotune.trackingId": "04246573-4369-45b8-9d5f-4114da41e1cd"
+						"spark.autotune.trackingId": "2ef2692b-1d36-4943-ad2f-fcda1a203eda"
 					}
 				},
 				"metadata": {
@@ -1567,15 +1567,13 @@
 						"sparkVersion": "3.4",
 						"nodeCount": 10,
 						"cores": 4,
-						"memory": 28,
-						"automaticScaleJobs": false
+						"memory": 28
 					},
 					"sessionKeepAliveTimeout": 30
 				},
 				"cells": [
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
 							"\n",
@@ -1587,30 +1585,27 @@
 							"df_raw.show(5)"
 						],
 						"outputs": [],
-						"execution_count": 9
+						"execution_count": 1
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"df_raw.printSchema()"
 						],
 						"outputs": [],
-						"execution_count": 10
+						"execution_count": 2
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"from pyspark.sql.functions import col, from_json\n",
 							"from pyspark.sql.types import StructType, StructField, StringType"
 						],
 						"outputs": [],
-						"execution_count": 11
+						"execution_count": 3
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"# Define expected schema for JSON inside Body\n",
 							"body_schema = StructType([\n",
@@ -1623,11 +1618,10 @@
 							"])"
 						],
 						"outputs": [],
-						"execution_count": 12
+						"execution_count": 4
 					},
 					{
 						"cell_type": "code",
-						"metadata": {},
 						"source": [
 							"# Parse the Body column from binary to JSON and extract fields\n",
 							"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
@@ -1646,13 +1640,21 @@
 							"df_clean.show(10)"
 						],
 						"outputs": [],
-						"execution_count": 13
+						"execution_count": 5
+					},
+					{
+						"cell_type": "code",
+						"source": [
+							"%%pip install --no-cache-dir mssql-spark-connector-v5_2"
+						],
+						"outputs": [],
+						"execution_count": 6
 					},
 					{
 						"cell_type": "code",
 						"metadata": {
 							"jupyter": {
-								"outputs_hidden": true
+								"outputs_hidden": false
 							}
 						},
 						"source": [
@@ -1683,13 +1685,121 @@
 							"print(\"✅ Successfully wrote data to SQL pool!\")"
 						],
 						"outputs": [],
-						"execution_count": 14
+						"execution_count": null
+					}
+				]
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Store_data_as_parquet')]",
+			"type": "Microsoft.Synapse/workspaces/notebooks",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"nbformat": 4,
+				"nbformat_minor": 2,
+				"bigDataPool": {
+					"referenceName": "SparkPool1",
+					"type": "BigDataPoolReference"
+				},
+				"sessionProperties": {
+					"driverMemory": "28g",
+					"driverCores": 4,
+					"executorMemory": "28g",
+					"executorCores": 4,
+					"numExecutors": 2,
+					"conf": {
+						"spark.dynamicAllocation.enabled": "false",
+						"spark.dynamicAllocation.minExecutors": "2",
+						"spark.dynamicAllocation.maxExecutors": "2",
+						"spark.autotune.trackingId": "b888c108-aaa6-4e85-84f1-cce703228774"
+					}
+				},
+				"metadata": {
+					"saveOutput": true,
+					"enableDebugMode": false,
+					"kernelspec": {
+						"name": "synapse_pyspark",
+						"display_name": "python"
+					},
+					"language_info": {
+						"name": "python"
+					},
+					"a365ComputeOptions": {
+						"id": "/subscriptions/5c9e885b-e6e9-4aad-8ff0-49678f8f5001/resourceGroups/My_Azure_Synapse_Workshop/providers/Microsoft.Synapse/workspaces/asa-workshop-first-test/bigDataPools/SparkPool1",
+						"name": "SparkPool1",
+						"type": "Spark",
+						"endpoint": "https://asa-workshop-first-test.dev.azuresynapse.net/livyApi/versions/2019-11-01-preview/sparkPools/SparkPool1",
+						"auth": {
+							"type": "AAD",
+							"authResource": "https://dev.azuresynapse.net"
+						},
+						"sparkVersion": "3.4",
+						"nodeCount": 10,
+						"cores": 4,
+						"memory": 28,
+						"automaticScaleJobs": false
+					},
+					"sessionKeepAliveTimeout": 30
+				},
+				"cells": [
+					{
+						"cell_type": "code",
+						"metadata": {},
+						"source": [
+							"from pyspark.sql.functions import col, from_json\n",
+							"from pyspark.sql.types import StructType, StructField, StringType\n",
+							"\n",
+							"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
+							"\n",
+							"df_raw = spark.read \\\n",
+							"    .format(\"avro\") \\\n",
+							"    .option(\"recursiveFileLookup\", \"true\") \\\n",
+							"    .load(avro_path_all_partitions)\n",
+							"\n",
+							"# Define expected schema for JSON inside Body\n",
+							"body_schema = StructType([\n",
+							"    StructField(\"time\", StringType()),\n",
+							"    StructField(\"operationName\", StringType()),\n",
+							"    StructField(\"category\", StringType()),\n",
+							"    StructField(\"resourceId\", StringType()),\n",
+							"    StructField(\"level\", StringType()),\n",
+							"    StructField(\"location\", StringType())\n",
+							"])\n",
+							"\n",
+							"# Parse the Body column from binary to JSON and extract fields\n",
+							"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
+							"\n",
+							"# Select useful fields\n",
+							"df_clean = df_parsed.select(\n",
+							"    col(\"log.time\").alias(\"LogTime\"),\n",
+							"    col(\"log.operationName\").alias(\"Operation\"),\n",
+							"    col(\"log.category\").alias(\"Category\"),\n",
+							"    col(\"log.level\").alias(\"Severity\"),\n",
+							"    col(\"log.resourceId\").alias(\"ResourceId\"),\n",
+							"    col(\"log.location\").alias(\"Location\")\n",
+							")\n",
+							"\n",
+							"# Show cleaned data\n",
+							"df_clean.show(10)"
+						],
+						"outputs": [],
+						"execution_count": null
 					},
 					{
 						"cell_type": "code",
 						"metadata": {},
 						"source": [
-							""
+							"# Define output path in Blob Storage\n",
+							"parquet_path = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/processed_logs/\"\n",
+							"\n",
+							"# Save cleaned logs as Parquet files\n",
+							"df_clean.write \\\n",
+							"    .format(\"parquet\") \\\n",
+							"    .mode(\"overwrite\") \\\n",
+							"    .save(parquet_path)\n",
+							"\n",
+							"print(\"✅ Logs saved as Parquet in Blob Storage\")"
 						],
 						"outputs": [],
 						"execution_count": null
@@ -1828,7 +1938,7 @@
 				},
 				"autoScale": {
 					"enabled": true,
-					"maxNodeCount": 17,
+					"maxNodeCount": 12,
 					"minNodeCount": 3
 				},
 				"nodeCount": 10,
