@@ -1,5 +1,5 @@
 {
-	"name": "Notebook 2",
+	"name": "Store_data_as_parquet",
 	"properties": {
 		"nbformat": 4,
 		"nbformat_minor": 2,
@@ -17,7 +17,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "2ef2692b-1d36-4943-ad2f-fcda1a203eda"
+				"spark.autotune.trackingId": "37ff04cd-6aa5-43ae-92cc-5f2b53a2fba1"
 			}
 		},
 		"metadata": {
@@ -25,7 +25,7 @@
 			"enableDebugMode": false,
 			"kernelspec": {
 				"name": "synapse_pyspark",
-				"display_name": "Synapse PySpark"
+				"display_name": "python"
 			},
 			"language_info": {
 				"name": "python"
@@ -51,6 +51,9 @@
 			{
 				"cell_type": "code",
 				"source": [
+					"from pyspark.sql.functions import col, from_json\n",
+					"from pyspark.sql.types import StructType, StructField, StringType\n",
+					"\n",
 					"avro_path_all_partitions = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/synapse-log-hub/synapselogs/\"\n",
 					"\n",
 					"df_raw = spark.read \\\n",
@@ -58,28 +61,6 @@
 					"    .option(\"recursiveFileLookup\", \"true\") \\\n",
 					"    .load(avro_path_all_partitions)\n",
 					"\n",
-					"df_raw.show(5)"
-				],
-				"execution_count": 1
-			},
-			{
-				"cell_type": "code",
-				"source": [
-					"df_raw.printSchema()"
-				],
-				"execution_count": 2
-			},
-			{
-				"cell_type": "code",
-				"source": [
-					"from pyspark.sql.functions import col, from_json\n",
-					"from pyspark.sql.types import StructType, StructField, StringType"
-				],
-				"execution_count": 3
-			},
-			{
-				"cell_type": "code",
-				"source": [
 					"# Define expected schema for JSON inside Body\n",
 					"body_schema = StructType([\n",
 					"    StructField(\"time\", StringType()),\n",
@@ -88,13 +69,8 @@
 					"    StructField(\"resourceId\", StringType()),\n",
 					"    StructField(\"level\", StringType()),\n",
 					"    StructField(\"location\", StringType())\n",
-					"])"
-				],
-				"execution_count": 4
-			},
-			{
-				"cell_type": "code",
-				"source": [
+					"])\n",
+					"\n",
 					"# Parse the Body column from binary to JSON and extract fields\n",
 					"df_parsed = df_raw.withColumn(\"log\", from_json(col(\"Body\").cast(\"string\"), body_schema))\n",
 					"\n",
@@ -111,48 +87,21 @@
 					"# Show cleaned data\n",
 					"df_clean.show(10)"
 				],
-				"execution_count": 5
+				"execution_count": null
 			},
 			{
 				"cell_type": "code",
 				"source": [
-					"%%pip install --no-cache-dir mssql-spark-connector-v5_2"
-				],
-				"execution_count": 6
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"outputs_hidden": false
-					}
-				},
-				"source": [
-					"# Step 1: Add the SQL connector to Spark session\n",
-					"from pyspark.sql import SparkSession\n",
+					"# Define output path in Blob Storage\n",
+					"parquet_path = \"abfss://eventhublogs@asafirstworkshop.dfs.core.windows.net/processed_logs/\"\n",
 					"\n",
-					"spark = SparkSession.builder \\\n",
-					"    .appName(\"WriteToSQL\") \\\n",
-					"    .config(\"spark.jars.packages\", \"com.microsoft.azure:spark-mssql-connector_2.12:1.2.0\") \\\n",
-					"    .getOrCreate()\n",
-					"\n",
-					"# Step 2: Define connection info\n",
-					"workspace_name = \"asa-workshop-first-test\"\n",
-					"sql_pool_name = \"DedicatedP1\"\n",
-					"username = \"sqladminuser@asa-workshop-first-test\"  # ← Your SQL admin username\n",
-					"password = \"Passuneverc022/#\"\n",
-					"\n",
-					"jdbc_url = f\"jdbc:sqlserver://{workspace_name}.sql.azuresynapse.net:1433;databaseName={sql_pool_name};user={username};password={password};encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.sql.azuresynapse.net;loginTimeout=30;\"\n",
-					"\n",
-					"# Step 3: Write DataFrame to SQL pool\n",
+					"# Save cleaned logs as Parquet files\n",
 					"df_clean.write \\\n",
-					"    .format(\"com.microsoft.sqlserver.jdbc.spark\") \\\n",
-					"    .mode(\"append\") \\\n",
-					"    .option(\"url\", jdbc_url) \\\n",
-					"    .option(\"dbtable\", \"dbo.EventHubLogs\") \\\n",
-					"    .save()\n",
+					"    .format(\"parquet\") \\\n",
+					"    .mode(\"overwrite\") \\\n",
+					"    .save(parquet_path)\n",
 					"\n",
-					"print(\"✅ Successfully wrote data to SQL pool!\")"
+					"print(\"✅ Logs saved as Parquet in Blob Storage\")"
 				],
 				"execution_count": null
 			}
